@@ -3,6 +3,7 @@ import sys
 import random
 import os
 import time
+from threading import Thread
 
 class Slot:
     def __init__(self, x, y):
@@ -16,6 +17,39 @@ class Slot:
             "left": None,
             "right": None
         }
+
+class Mover(Thread):
+    def __init__(self, grid, column, direction, col_nb):
+        Thread.__init__(self)
+        self.grid = grid
+        self.column = column
+        self.direction = direction
+        self.col_nb = col_nb
+    
+    def run(self):
+        print('COLUMN # {}'.format(self.col_nb))
+        for slot in self.column:
+            if slot.value:
+                current = slot
+                next_slot = current.neighbors[self.direction]
+                while True:
+                    if next_slot == 'LIMIT':
+                        break
+                    elif next_slot.value == '':
+                        self.grid.matrix[next_slot.y][next_slot.x].value = current.value
+                        self.grid.matrix[current.y][current.x].value = ''
+                        self.grid.print_matrix()
+                        time.sleep(0.025)
+                    elif next_slot.value == current.value and not next_slot.immutable and not current.immutable:
+                        self.grid.matrix[next_slot.y][next_slot.x].value = current.value * 2
+                        self.grid.matrix[next_slot.y][next_slot.x].immutable = True
+                        self.grid.matrix[current.y][current.x].value = ''
+                        self.grid.print_matrix()
+                        time.sleep(0.025)
+                    current = self.grid.matrix[next_slot.y][next_slot.x]
+                    next_slot = current.neighbors[self.direction]
+        self.grid._Grid__reset_immutables()
+
 
 class Grid:
     def __init__(self, size):
@@ -76,6 +110,7 @@ class Grid:
     
     def move(self, direction):
         self.__reset_neighbors()
+        slot_list = []
         for i in range(self.size):
             if direction in ['up', 'down']:
                 slots = self.__extract_column(i)
@@ -83,27 +118,23 @@ class Grid:
                 slots = self.__extract_row(i)
             if direction in ['down', 'right']:
                 slots.reverse()
-            for slot in slots:
-                if slot.value:
-                    current = slot
-                    next_slot = current.neighbors[direction]
-                    while True:
-                        if next_slot == 'LIMIT':
-                            break
-                        elif next_slot.value == '':
-                            self.matrix[next_slot.y][next_slot.x].value = current.value
-                            self.matrix[current.y][current.x].value = ''
-                            self.print_matrix()
-                            time.sleep(0.025)
-                        elif next_slot.value == current.value and not next_slot.immutable and not current.immutable:
-                            self.matrix[next_slot.y][next_slot.x].value = current.value * 2
-                            self.matrix[next_slot.y][next_slot.x].immutable = True
-                            self.matrix[current.y][current.x].value = ''
-                            self.print_matrix()
-                            time.sleep(0.025)
-                        current = self.matrix[next_slot.y][next_slot.x]
-                        next_slot = current.neighbors[direction]
-            self.__reset_immutables()
+            slot_list.append(slots)
+        
+        thread_1 = Mover(self, slot_list[0], direction, 0)
+        thread_2 = Mover(self, slot_list[1], direction, 1)
+        thread_3 = Mover(self, slot_list[2], direction, 2)
+        thread_4 = Mover(self, slot_list[3], direction, 3)
+        print("Starting threads")
+        thread_1.start()
+        thread_2.start()
+        thread_3.start()
+        thread_4.start()
+        
+        thread_1.join()
+        thread_2.join()
+        thread_3.join()
+        thread_4.join()
+        
         self.__add_random_number()
     
     def __add_random_number(self):
@@ -162,3 +193,4 @@ g.print_matrix()
 
 with Listener(on_press=on_press, on_release=on_release) as listener:
     listener.join()
+
