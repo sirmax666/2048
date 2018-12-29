@@ -4,3 +4,6 @@
 Had fun implementing this.
 
 Use `ESC` to quit
+
+
+Use `r` to restart game
