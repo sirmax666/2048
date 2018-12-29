@@ -1,6 +1,5 @@
 from pynput.keyboard import Key, Listener
 import sys
-import operator
 import random
 import os
 import time
@@ -19,13 +18,6 @@ class Slot:
         }
 
 class Grid:
-    op = {
-        "up": operator.sub,
-        "down": operator.add,
-        "left": operator.sub,
-        "right": operator.add
-    }
-    
     def __init__(self, size):
         self.size = size
         self.matrix = self.__init_matrix()
@@ -62,29 +54,25 @@ class Grid:
                 else:
                     self.matrix[y][x].neighbors['right'] = 'LIMIT'
     
-    def __reset_indexes(self):
-        for x in range(self.size):
-            for y in range(self.size):
-                self.matrix[y][x].x = x
-                self.matrix[y][x].y = y
-    
     def print_matrix(self):
         self.__cls()
-        print('---------------------')
+        sep = '-' * (self.size * 5 + 1)
+        print(sep)
         for line in self.matrix:
             for e in line:
                 sys.stdout.write('|' + str(e.value).rjust(4))
             sys.stdout.write('|\n')
-            print('---------------------')
+            print(sep)
     
     def print_matrix_coord(self):
-        print('---------------------')
+        sep = '-' * (self.size * 5 + 1)
+        print(sep)
         for line in self.matrix:
             for e in line:
                 sys.stdout.write('|' + str(e.value).rjust(4))
                 sys.stdout.write('|' + "({},{})".format(e.y, e.x))
             sys.stdout.write('|\n')
-            print('---------------------')
+            print(sep)
     
     def move(self, direction):
         self.__reset_neighbors()
@@ -106,13 +94,13 @@ class Grid:
                             self.matrix[next_slot.y][next_slot.x].value = current.value
                             self.matrix[current.y][current.x].value = ''
                             self.print_matrix()
-                            time.sleep(0.1)
+                            time.sleep(0.025)
                         elif next_slot.value == current.value and not next_slot.immutable and not current.immutable:
                             self.matrix[next_slot.y][next_slot.x].value = current.value * 2
                             self.matrix[next_slot.y][next_slot.x].immutable = True
                             self.matrix[current.y][current.x].value = ''
                             self.print_matrix()
-                            time.sleep(0.1)
+                            time.sleep(0.025)
                         current = self.matrix[next_slot.y][next_slot.x]
                         next_slot = current.neighbors[direction]
             self.__reset_immutables()
@@ -174,5 +162,3 @@ g.print_matrix()
 
 with Listener(on_press=on_press, on_release=on_release) as listener:
     listener.join()
-
-
