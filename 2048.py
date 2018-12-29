@@ -1,4 +1,4 @@
-from pynput.keyboard import Key, Listener
+from pynput.keyboard import Key, KeyCode, Listener
 import sys
 import random
 import os
@@ -155,10 +155,14 @@ def on_release(key):
     elif key == Key.right:
         g.move('right')
         g.print_matrix()
-
+    elif key == KeyCode.from_char('r'):
+        g = Grid(4)
+        g.print_matrix()
+        print("### Game was restarted ###")
 
 g = Grid(4)
 g.print_matrix()
 
 with Listener(on_press=on_press, on_release=on_release) as listener:
     listener.join()
+
